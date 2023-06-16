@@ -3,12 +3,12 @@ import functools
 from dask.dataframe.dispatch import make_meta, meta_nonempty
 from dask.utils import M, apply
 
-from dask_expr.expr import Blockwise, Expr, Projection
+from dask_expr.frame import Blockwise, Frame, Projection
 from dask_expr.repartition import Repartition
 from dask_expr.shuffle import Shuffle, _contains_index_name
 
 
-class Merge(Expr):
+class Merge(Frame):
     """Merge / join two dataframes
 
     This is an abstract class.  It will be transformed into a concrete
@@ -221,7 +221,7 @@ class BlockwiseMerge(Merge, Blockwise):
     def _simplify_down(self):
         return None
 
-    def _broadcast_dep(self, dep: Expr):
+    def _broadcast_dep(self, dep: Frame):
         return dep.npartitions == 1
 
     def _task(self, index: int):

@@ -6,7 +6,7 @@ import pytest
 from dask.dataframe.utils import assert_eq
 
 from dask_expr import from_dask_dataframe, from_pandas, optimize, read_csv, read_parquet
-from dask_expr.expr import Expr, Lengths, Literal
+from dask_expr.frame import Frame, Lengths, Literal
 from dask_expr.io import ReadParquet
 from dask_expr.reductions import Len
 
@@ -233,7 +233,7 @@ def test_parquet_len_filter(tmpdir):
 def test_from_dask_dataframe(optimize):
     ddf = dd.from_dict({"a": range(100)}, npartitions=10)
     df = from_dask_dataframe(ddf, optimize=optimize)
-    assert isinstance(df.expr, Expr)
+    assert isinstance(df.expr, Frame)
     assert_eq(df, ddf)
 
 

@@ -5,11 +5,11 @@ import math
 
 from dask.dataframe.io.io import sorted_division_locations
 
-from dask_expr.expr import Blockwise, Expr, Lengths, Literal, PartitionsFiltered
+from dask_expr.frame import Blockwise, Frame, Lengths, Literal, PartitionsFiltered
 from dask_expr.reductions import Len
 
 
-class IO(Expr):
+class IO(Frame):
     def __str__(self):
         return f"{type(self).__name__}({self._name[-7:]})"
 

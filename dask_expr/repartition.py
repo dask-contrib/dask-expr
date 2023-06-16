@@ -10,10 +10,10 @@ from dask.dataframe.utils import is_series_like
 from pandas.api.types import is_datetime64_any_dtype, is_numeric_dtype
 from tlz import unique
 
-from dask_expr.expr import Expr, Projection
+from dask_expr.frame import Frame, Projection
 
 
-class Repartition(Expr):
+class Repartition(Frame):
     """Abstract repartitioning expression"""
 
     _parameters = ["frame", "n", "new_divisions", "force"]

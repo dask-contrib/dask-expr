@@ -18,7 +18,7 @@ from dask.dataframe.groupby import (
 from dask.utils import M, is_index_like
 
 from dask_expr.collection import DataFrame, new_collection
-from dask_expr.expr import MapPartitions
+from dask_expr.frame import MapPartitions
 from dask_expr.reductions import ApplyConcatApply, Reduction
 
 

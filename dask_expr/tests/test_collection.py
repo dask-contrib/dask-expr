@@ -10,7 +10,7 @@ from dask.dataframe._compat import PANDAS_GT_210
 from dask.dataframe.utils import assert_eq
 from dask.utils import M
 
-from dask_expr import expr, from_pandas, optimize
+from dask_expr import frame, from_pandas, optimize
 from dask_expr.datasets import timeseries
 from dask_expr.reductions import Len
 
@@ -376,7 +376,7 @@ def test_head_down(df):
 
     assert_eq(result, optimized)
 
-    assert not isinstance(optimized.expr, expr.Head)
+    assert not isinstance(optimized.expr, frame.Head)
 
 
 def test_head_head(df):
@@ -399,7 +399,7 @@ def test_tail_down(df):
 
     assert_eq(result, optimized)
 
-    assert not isinstance(optimized.expr, expr.Tail)
+    assert not isinstance(optimized.expr, frame.Tail)
 
 
 def test_tail_tail(df):
@@ -493,7 +493,7 @@ def test_partitions(pdf, df):
     assert_eq(df.partitions[-1], pdf.iloc[90:])
 
     out = (df + 1).partitions[0].optimize(fuse=False)
-    assert isinstance(out.expr, expr.Add)
+    assert isinstance(out.expr, frame.Add)
     assert out.expr.left._partitions == [0]
 
     # Check culling
@@ -615,8 +615,8 @@ def test_depth(df):
 
 
 def test_partitions_nested(df):
-    a = expr.Partitions(expr.Partitions(df.expr, [2, 4, 6]), [0, 2])
-    b = expr.Partitions(df.expr, [2, 6])
+    a = frame.Partitions(frame.Partitions(df.expr, [2, 4, 6]), [0, 2])
+    b = frame.Partitions(df.expr, [2, 6])
 
     assert a.optimize()._name == b.optimize()._name
 
@@ -656,8 +656,8 @@ def test_len(df, pdf):
     first = df2.partitions[0].compute()
     assert len(df2.partitions[0]) == len(first)
 
-    assert isinstance(Len(df2.expr).optimize(), expr.Literal)
-    assert isinstance(expr.Lengths(df2.expr).optimize(), expr.Literal)
+    assert isinstance(Len(df2.expr).optimize(), frame.Literal)
+    assert isinstance(frame.Lengths(df2.expr).optimize(), frame.Literal)
 
 
 def test_drop_duplicates(df, pdf):
@@ -689,13 +689,13 @@ def test_unique(df, pdf):
 def test_find_operations(df):
     df2 = df[df["x"] > 1][["y"]] + 1
 
-    filters = list(df2.find_operations(expr.Filter))
+    filters = list(df2.find_operations(frame.Filter))
     assert len(filters) == 1
 
-    projections = list(df2.find_operations(expr.Projection))
+    projections = list(df2.find_operations(frame.Projection))
     assert len(projections) == 2
 
-    adds = list(df2.find_operations(expr.Add))
+    adds = list(df2.find_operations(frame.Add))
     assert len(adds) == 1
     assert next(iter(adds))._name == df2._name
 

@@ -5,7 +5,7 @@ import pandas as pd
 from dask.utils import random_state_data
 
 from dask_expr.collection import new_collection
-from dask_expr.expr import Projection
+from dask_expr.frame import Projection
 from dask_expr.io import BlockwiseIO, PartitionsFiltered
 
 __all__ = ["timeseries"]

@@ -17,7 +17,7 @@ from dask.dataframe.shuffle import (
 )
 from dask.utils import digit, get_default_shuffle_algorithm, insert
 
-from dask_expr.expr import Blockwise, Expr, PartitionsFiltered, Projection
+from dask_expr.frame import Blockwise, Frame, PartitionsFiltered, Projection
 from dask_expr.reductions import (
     All,
     Any,
@@ -41,12 +41,12 @@ from dask_expr.reductions import (
 from dask_expr.repartition import Repartition
 
 
-class Shuffle(Expr):
+class Shuffle(Frame):
     """Abstract shuffle class
 
     Parameters
     ----------
-    frame: Expr
+    frame: Frame
         The DataFrame-like expression to shuffle.
     partitioning_index: str, list
         Column and/or index names to hash and partition by.
@@ -181,7 +181,7 @@ class ShuffleBackend(Shuffle):
     _defaults = {"_partitions": None}
 
     @classmethod
-    def from_abstract_shuffle(cls, expr: Shuffle) -> Expr:
+    def from_abstract_shuffle(cls, expr: Shuffle) -> Frame:
         """Create an Expr tree that uses this ShuffleBackend class"""
         raise NotImplementedError()
 
@@ -195,7 +195,7 @@ class SimpleShuffle(PartitionsFiltered, ShuffleBackend):
     lazy_hash_support = True
 
     @classmethod
-    def from_abstract_shuffle(cls, expr: Shuffle) -> Expr:
+    def from_abstract_shuffle(cls, expr: Shuffle) -> Frame:
         frame = expr.frame
         partitioning_index = expr.partitioning_index
         npartitions_out = expr.npartitions_out
@@ -500,7 +500,7 @@ def _is_column_label_reference(df, key):
     least one column.
     """
     return (
-        not isinstance(key, Expr)
+        not isinstance(key, Frame)
         and (np.isscalar(key) or isinstance(key, tuple))
         and key in df.columns
     )
@@ -523,10 +523,10 @@ def _is_index_level_reference(df, key):
     To be considered an index level reference, `key` must match the index name
     and must NOT match the name of any column.
     """
-    index_name = df.index._meta.name if isinstance(df, Expr) else df.index.name
+    index_name = df.index._meta.name if isinstance(df, Frame) else df.index.name
     return (
         index_name is not None
-        and not isinstance(key, Expr)
+        and not isinstance(key, Frame)
         and (np.isscalar(key) or isinstance(key, tuple))
         and key == index_name
         and key not in getattr(df, "columns", ())
@@ -541,7 +541,7 @@ class AssignPartitioningIndex(Blockwise):
 
     Parameters
     ----------
-    frame: Expr
+    frame: Frame
         Frame-like expression being partitioned.
     partitioning_index: Expr or list
         Index-like expression or list of columns to construct
