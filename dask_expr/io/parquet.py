@@ -552,7 +552,7 @@ class ReadParquet(PartitionsFiltered, BlockwiseIO):
 
         return dataset_info
 
-    @property
+    @cached_property
     def _meta(self):
         meta = self._dataset_info["meta"]
         if self._series:
