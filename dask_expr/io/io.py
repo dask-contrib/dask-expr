@@ -137,6 +137,9 @@ class FusedIO(BlockwiseIO):
     def npartitions(self):
         return len(self._fusion_buckets)
 
+    def _broadcast_dep(self, dep: Expr):
+        return dep.npartitions == 1
+
     def _divisions(self):
         divisions = self.operand("expr")._divisions()
         new_divisions = [divisions[b[0]] for b in self._fusion_buckets]

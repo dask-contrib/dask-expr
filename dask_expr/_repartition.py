@@ -135,7 +135,7 @@ class RepartitionToFewer(Repartition):
     def _partitions_boundaries(self):
         npartitions = self.new_partitions
         npartitions_input = self.frame.npartitions
-        assert npartitions_input > npartitions
+        assert npartitions_input >= npartitions
 
         npartitions_ratio = npartitions_input / npartitions
         new_partitions_boundaries = [
