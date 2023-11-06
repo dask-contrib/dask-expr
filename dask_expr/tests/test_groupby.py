@@ -1,6 +1,7 @@
 import pytest
 
 from dask_expr import from_pandas
+from dask_expr._expr import RenameFrame
 from dask_expr._reductions import TreeReduce
 from dask_expr.tests._util import _backend_library, assert_eq, xfail_gpu
 
@@ -185,6 +186,32 @@ def test_groupby_agg_split_out(pdf, df, spec, sort, split_out):
 
     expect = pdf.groupby("x", sort=sort).agg(spec)
     assert_eq(agg, expect, sort_results=not sort)
+
+
+def test_groupby_size_simplify(pdf, df):
+    q = df.groupby("x").size()
+    expected = df[["x"]].groupby("x").size().optimize()._name
+    assert q.optimize()._name == expected
+    assert_eq(q, pdf.groupby("x").size())
+    assert_eq(df.groupby("x").y.size(), pdf.groupby("x").y.size())
+    q = df.groupby("x")[["y", "z"]].size()
+    assert q.optimize()._name == expected
+    assert_eq(q, pdf.groupby("x")[["y", "z"]].size())
+
+    q = df.groupby("x").agg({"y": "sum", "z": "size"})
+    expected = (
+        df[["x", "y"]]
+        .groupby("x")
+        .agg({"y": "sum", "x": "size"})
+        .rename({"x": "z"})
+        .optimize()
+    )
+    assert q.optimize()._name == expected._name
+    assert_eq(q, pdf.groupby("x").agg({"y": "sum", "z": "size"}))
+
+    q = df.groupby("x").agg({"y": "sum", "z": "size", "x": "sum"})
+    assert not isinstance(q.optimize().expr, RenameFrame)
+    assert_eq(q, pdf.groupby("x").agg({"y": "sum", "z": "size", "x": "sum"}))
 
 
 def test_groupby_reduction_shuffle(df, pdf):

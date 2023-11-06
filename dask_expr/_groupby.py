@@ -21,7 +21,7 @@ from dask.dataframe.groupby import (
 from dask.utils import M, is_index_like
 
 from dask_expr._collection import DataFrame, Index, Series, new_collection
-from dask_expr._expr import Expr, MapPartitions, Projection
+from dask_expr._expr import Expr, MapPartitions, Projection, RenameFrame
 from dask_expr._reductions import ApplyConcatApply, Chunk, Reduction
 
 
@@ -278,14 +278,34 @@ class GroupbyAggregation(GroupByApplyConcatApply):
 
     def _simplify_down(self):
         # Use agg-spec information to add column projection
+        by_is_expr = isinstance(self.by, Expr)
+        by_columns = self.by if not by_is_expr else []
+        if (
+            isinstance(self.arg, dict)
+            and not by_is_expr
+            and sum([v == "size" for v in self.arg.values()]) == 1
+        ):
+            # Use by columns for size to reduce memory footprint
+            key = [k for k in self.arg.keys() if self.arg[k] == "size"][0]
+            if key not in by_columns:
+                available_by_columns = sorted(set(by_columns) - set(self.arg.keys()))
+                if len(available_by_columns) > 0:
+                    arg = {
+                        k if k != key else available_by_columns[0]: v
+                        for k, v in self.arg.items()
+                    }
+                    e = type(self)(
+                        self.frame, self.operands[1], arg, *self.operands[3:]
+                    )
+                    return RenameFrame(e, {available_by_columns[0]: key})
+
         column_projection = None
-        by_columns = self.by if not isinstance(self.by, Expr) else []
         if isinstance(self.arg, dict):
             column_projection = (
                 set(by_columns).union(self.arg.keys()).intersection(self.frame.columns)
             )
         if column_projection and column_projection < set(self.frame.columns):
-            return type(self)(self.frame[list(column_projection)], *self.operands[1:])
+            return type(self)(self.frame[sorted(column_projection)], *self.operands[1:])
 
 
 class Sum(SingleAggregation):
@@ -320,6 +340,20 @@ class Count(SingleAggregation):
 class Size(SingleAggregation):
     groupby_chunk = M.size
     groupby_aggregate = M.sum
+
+    def _simplify_down(self):
+        if self._slice is not None and not isinstance(self._slice, list):
+            # Single projections influence the result and are allowed
+            return
+
+        # We can remove every column since pandas reduces to a Series
+        by_columns = self.by if not isinstance(self.by, Expr) else [self.columns[0]]
+        if set(by_columns) == set(self.frame.columns):
+            return
+
+        slice_idx = self._parameters.index("_slice")
+        ops = [op if i != slice_idx else None for i, op in enumerate(self.operands)]
+        return type(self)(self.frame[by_columns], *ops[1:])
 
 
 class ValueCounts(SingleAggregation):
