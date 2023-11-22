@@ -681,6 +681,7 @@ class DataFrame(FrameBase):
         suffixes=("_x", "_y"),
         indicator=False,
         shuffle_backend=None,
+        **kwargs,
     ):
         """Merge the DataFrame with another DataFrame
 
@@ -719,6 +720,9 @@ class DataFrame(FrameBase):
         shuffle_backend: optional
             Shuffle backend to use if shuffling is necessary.
         """
+
+        if "shuffle" in kwargs and shuffle_backend is None:
+            shuffle_backend = kwargs.get("shuffle")
 
         left = self.expr
         right = (
@@ -774,6 +778,7 @@ class DataFrame(FrameBase):
         lsuffix="",
         rsuffix="",
         shuffle_backend=None,
+        **kwargs,
     ):
         if (
             not isinstance(other, list)
@@ -802,6 +807,7 @@ class DataFrame(FrameBase):
             how=how,
             suffixes=(lsuffix, rsuffix),
             shuffle_backend=shuffle_backend,
+            **kwargs,
         )
 
     def __setitem__(self, key, value):
@@ -1315,6 +1321,7 @@ def merge(
     suffixes=("_x", "_y"),
     indicator=False,
     shuffle_backend=None,
+    **kwargs,
 ):
     return left.merge(
         right,
@@ -1327,6 +1334,7 @@ def merge(
         suffixes,
         indicator,
         shuffle_backend,
+        **kwargs,
     )
 
 
