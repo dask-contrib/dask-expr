@@ -94,10 +94,11 @@ class Expr:
                     op = "<array>"
 
                 if repr(op) != repr(default):
-                    if param:
-                        header += f" {param}={repr(op)}"
-                    else:
-                        header += repr(op)
+                    if "object at 0x" not in repr(op):
+                        if param:
+                            header += f" {param}={repr(op)}"
+                        else:
+                            header += repr(op)
         lines = [header] + lines
         lines = [" " * indent + line for line in lines]
 
@@ -112,6 +113,9 @@ class Expr:
 
     def __hash__(self):
         return hash(self._name)
+
+    def __dask_tokenize__(self):
+        return self._name
 
     def __reduce__(self):
         if dask.config.get("dask-expr-no-serialize", False):
