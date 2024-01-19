@@ -46,6 +46,11 @@ class Expr:
                 # avoid infinite recursion
                 raise ValueError(f"{dep} has no attribute {self._required_attribute}")
 
+    def __exec__(self):
+        raise NotImplementedError(
+            f"Backend exec is not yet supported for {type(self)}."
+        )
+
     @property
     def _required_attribute(self) -> str:
         # Specify if the first `dependency` must support

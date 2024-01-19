@@ -297,6 +297,15 @@ class GroupbyAggregation(GroupByApplyConcatApply, GroupByBase):
     }
     chunk = staticmethod(_groupby_apply_funcs)
 
+    def __exec__(self):
+        frame = self.frame.__exec__()
+        kwargs = {
+            "sort": self.sort,
+            **_as_dict("observed", self.observed),
+            **_as_dict("dropna", self.dropna),
+        }
+        return frame.groupby(self.by, **kwargs).aggregate(self.arg)
+
     @functools.cached_property
     def spec(self):
         # Converts the `arg` operand into specific

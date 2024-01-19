@@ -371,6 +371,19 @@ class FrameBase(DaskMethodsMixin):
     def dask(self):
         return self.__dask_graph__()
 
+    def exec(self, simplify=True):
+        """Directly execute with the backend DataFrame library
+
+        WARNING: This is an experimental feature. Use at your own risk.
+
+        This function will NOT convert the expression to a task graph
+        and execute with dask. Instead, the backend library will be
+        used to execute the logic defined by the ``Expr.__exec__``
+        protocols directly.
+        """
+        out = self.simplify() if simplify else self
+        return out.expr.__exec__()
+
     def __dask_graph__(self):
         out = self.expr
         out = out.lower_completely()

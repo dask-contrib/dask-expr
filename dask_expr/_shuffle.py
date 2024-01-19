@@ -796,6 +796,14 @@ class SetIndex(BaseSetIndexSortValues):
             other = self._other
         return self.frame._meta.set_index(other, drop=self.drop)
 
+    def __exec__(self):
+        frame = self.frame.__exec__()
+        if isinstance(self._other, Expr):
+            other = self._other.__exec__()
+        else:
+            other = self._other
+        return frame.set_index(other, drop=self.drop)
+
     @property
     def _divisions_column(self):
         return self.other
@@ -963,6 +971,10 @@ class SortValues(BaseSetIndexSortValues):
     @functools.cached_property
     def _meta(self):
         return self.frame._meta
+
+    def __exec__(self):
+        frame = self.frame.__exec__()
+        return self.sort_function(frame, **self.sort_function_kwargs)
 
     @functools.cached_property
     def _meta_by_dtype(self):

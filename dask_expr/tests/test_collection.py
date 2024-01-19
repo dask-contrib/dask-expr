@@ -2294,3 +2294,11 @@ def test_axes(df, pdf):
     [assert_eq(d, p) for d, p in zip(df.axes, pdf.axes)]
     assert len(df.x.axes) == len(pdf.x.axes)
     assert_eq(df.x.axes[0], pdf.x.axes[0])
+
+
+def test_exec():
+    pdf = pd.DataFrame({"a": [1, 2, 3, 4, 5, 6], "b": 1, "c": 2})
+    df = from_pandas(pdf.copy())
+    result = (df + 1).sort_values("a")["a"]
+    result_pd = (pdf + 1).sort_values("a")["a"]
+    assert_eq(result.exec(), result_pd)

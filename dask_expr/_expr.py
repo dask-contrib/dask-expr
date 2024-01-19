@@ -504,6 +504,10 @@ class Blockwise(Expr):
         args = [op._meta if isinstance(op, Expr) else op for op in self._args]
         return self.operation(*args, **self._kwargs)
 
+    def __exec__(self):
+        args = [op.__exec__() if isinstance(op, Expr) else op for op in self._args]
+        return self.operation(*args, **self._kwargs)
+
     @functools.cached_property
     def _kwargs(self) -> dict:
         if self._keyword_only:
