@@ -106,13 +106,13 @@ def _tokenize_partial(expr, ignore: list | None = None) -> str:
     # Helper function to "tokenize" the operands
     # that are not in the `ignore` list
     ignore = ignore or []
-    return _tokenize_deterministic(
-        *[
-            op
-            for i, op in enumerate(expr.operands)
-            if i >= len(expr._parameters) or expr._parameters[i] not in ignore
-        ]
-    )
+    ops = []
+    for i, op in enumerate(expr.operands):
+        if i >= len(expr._parameters):
+            continue
+        elif expr._parameters[i] not in ignore:
+            ops.append(op)
+    return _tokenize_deterministic(*ops)
 
 
 class LRU(UserDict[K, V]):
