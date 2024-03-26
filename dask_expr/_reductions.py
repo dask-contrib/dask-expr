@@ -457,6 +457,29 @@ class ApplyConcatApply(Expr):
             not isinstance(self.split_out, bool) and self.split_out == 1 or sort
         )
 
+    @functools.cached_property
+    def need_to_shuffle(self):
+        split_by = self.split_by or self.frame.columns
+        if any(
+            set(split_by) >= (set(cols) if isinstance(cols, tuple) else {cols})
+            for cols in self.frame.unique_partition_mapping_columns
+        ):
+            return False
+        return True
+
+    @functools.cached_property
+    def unique_partition_mapping_columns(self):
+        if self.should_shuffle and not self.need_to_shuffle:
+            return self.frame.unique_partition_mapping_columns
+        elif self.should_shuffle:
+            return (
+                {self.split_by}
+                if not isinstance(self.split_by, list)
+                else {tuple(self.split_by)}
+            )
+        else:
+            return set()
+
     def _lower(self):
         # Normalize functions in case not all are defined
         chunk = self.chunk
@@ -491,6 +514,15 @@ class ApplyConcatApply(Expr):
                 aggregate_kwargs,
                 split_every=split_every,
             )
+        elif not self.need_to_shuffle:
+            # Repartition and return
+            if self.split_out is not True and self.split_out < chunked.npartitions:
+                from dask_expr import Repartition
+
+                return Repartition(chunked, new_partitions=self.split_out)
+            if self.ndim < chunked.ndim:
+                chunked = chunked[chunked.columns[0]]
+            return chunked
 
         # Lower into ShuffleReduce
         return ShuffleReduce(
